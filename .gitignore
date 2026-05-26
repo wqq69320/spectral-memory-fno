@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Notebooks
+.ipynb_checkpoints/
+
+# PyTorch checkpoints and generated artifacts
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.npy
+*.npz
+*.h5
+*.hdf5
+
+# Local data and generated outputs
+data/*
+!data/raw/
+data/raw/*
+!data/raw/.gitkeep
+!data/processed/
+data/processed/*
+!data/processed/.gitkeep
+outputs/*
+!outputs/.gitkeep
+results/*
+!results/figures/
+results/figures/*
+!results/figures/.gitkeep
+!results/tables/
+results/tables/*
+!results/tables/.gitkeep
+!results/checkpoints/
+results/checkpoints/*
+!results/checkpoints/.gitkeep
+
+# Caches and logs
+*.log
+logs/
+tmp/
+.cache/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Keep placeholder files trackable
+!.gitkeep

@@ -1,0 +1,21 @@
+# Model identifier.
+name: sm_fno2d
+
+# Input and output channel counts per grid point.
+in_channels: 1
+out_channels: 1
+
+# Number of retained Fourier modes for spatial modeling.
+modes: 8
+
+# Channel width used inside the FNO encoder.
+width: 32
+
+# Dimension of the state space memory.
+state_dim: 32
+
+# Number of stacked spectral-memory blocks.
+depth: 4
+
+# Dropout probability used during training.
+dropout: 0.0

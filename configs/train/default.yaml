@@ -1,0 +1,29 @@
+# Number of training epochs.
+epochs: 10
+
+# Mini-batch size.
+batch_size: 32
+
+# Optimizer name. Initial scaffold supports AdamW.
+optimizer: adamw
+
+# Initial learning rate.
+learning_rate: 0.001
+
+# Weight decay for optimizer regularization.
+weight_decay: 0.0001
+
+# Gradient clipping norm. Set to null to disable.
+grad_clip_norm: 1.0
+
+# Device preference: auto, cpu, cuda, or mps. CPU is the default for small smoke runs.
+device: cpu
+
+# Validation frequency in epochs.
+val_every: 1
+
+# Checkpoint frequency in epochs.
+checkpoint_every: 10
+
+# Random seed for training.
+seed: 42

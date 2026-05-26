@@ -1,0 +1,33 @@
+# Dataset identifier used by scripts and experiment configs.
+name: heat1d
+
+# Number of simulated trajectories to generate.
+num_samples: 128
+
+# Number of spatial grid points in one dimension.
+grid_size: 64
+
+# Number of temporal states per trajectory.
+time_steps: 50
+
+# Numerical time step for the simulator.
+dt: 0.001
+
+# Thermal diffusivity coefficient.
+alpha: 0.01
+
+# Periodic domain length.
+domain_length: 1.0
+
+# Fraction of samples used for training. The remainder is split into validation/test data.
+train_ratio: 0.8
+val_ratio: 0.1
+
+# Random seed for reproducible data generation.
+seed: 42
+
+# Relative output path for processed arrays.
+output_dir: data/processed/heat1d
+
+# Relative output file for generated trajectories and metadata.
+output_path: data/processed/heat1d/heat1d.npz

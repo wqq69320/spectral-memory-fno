@@ -1,0 +1,36 @@
+# Minimal Heat1D pipeline smoke experiment using the MLP baseline.
+name: heat1d_mlp_smoke
+
+# Relative config paths used by scripts.
+data_config: configs/data/heat1d.yaml
+model_config: configs/model/mlp.yaml
+train_config: configs/train/default.yaml
+
+# Generated dataset path. Run scripts/generate_data.py first.
+data_path: data/processed/heat1d/heat1d.npz
+
+# Forecasting window sizes.
+input_steps: 10
+pred_steps: 1
+rollout_steps: 5
+
+# Small CPU-friendly training settings for pipeline validation.
+epochs: 2
+batch_size: 64
+learning_rate: 0.001
+weight_decay: 0.0001
+grad_clip_norm: 1.0
+device: cpu
+seed: 42
+
+# Split ratios are applied by trajectory, not by individual windows.
+train_ratio: 0.8
+val_ratio: 0.1
+
+# Local artifact paths.
+output_dir: outputs/heat1d_mlp_smoke
+checkpoint_path: results/checkpoints/heat1d_mlp_smoke.pt
+train_metrics_path: results/tables/heat1d_mlp_smoke_train_metrics.json
+eval_metrics_path: results/tables/heat1d_mlp_smoke_eval_metrics.json
+prediction_path: outputs/heat1d_mlp_smoke/predictions.npz
+figures_dir: results/figures

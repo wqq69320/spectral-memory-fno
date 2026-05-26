@@ -1,0 +1,21 @@
+# CPU-friendly M11 Navier-Stokes2D v1/v2 horizon-sweep analysis.
+#
+# These runs validate 2D analysis mechanics only. They are not final benchmarks.
+name: m11_navier_stokes2d_v2_cost
+
+experiments:
+  - configs/experiment/navier_stokes2d_fno_smoke.yaml
+  - configs/experiment/navier_stokes2d_sm_fno_smoke.yaml
+  - configs/experiment/navier_stokes2d_sm_fno_v2_smoke.yaml
+  - configs/experiment/navier_stokes2d_transformer_smoke.yaml
+
+horizons:
+  - 5
+  - 10
+  - 20
+
+seeds:
+  - 0
+  - 1
+
+expanded_config_dir: outputs

@@ -1,0 +1,21 @@
+# Minimal experiment intended to verify imports, shapes, and command wiring.
+name: smoke_test
+
+# Relative config paths used by scripts.
+data_config: configs/data/heat1d.yaml
+model_config: configs/model/sm_fno1d.yaml
+train_config: configs/train/default.yaml
+
+# Keep smoke tests tiny.
+num_samples: 8
+grid_size: 32
+time_steps: 8
+batch_size: 2
+epochs: 1
+rollout_steps: 4
+
+# Random seed for deterministic smoke tests.
+seed: 42
+
+# Local output directory for generated smoke artifacts.
+output_dir: outputs/smoke_test

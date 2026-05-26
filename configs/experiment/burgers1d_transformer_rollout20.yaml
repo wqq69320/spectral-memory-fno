@@ -1,0 +1,38 @@
+# Protocol-validation Burgers1D config using the Transformer1D baseline.
+# This is not a final benchmark configuration.
+name: burgers1d_transformer_rollout20
+
+data_config: configs/data/burgers1d.yaml
+model_config: configs/model/transformer1d.yaml
+train_config: configs/train/default.yaml
+
+data_path: data/processed/burgers1d/burgers1d.npz
+
+input_steps: 10
+pred_steps: 1
+rollout_steps: 20
+
+epochs: 2
+batch_size: 64
+learning_rate: 0.001
+weight_decay: 0.0001
+grad_clip_norm: 1.0
+device: cpu
+seed: 42
+
+train_ratio: 0.8
+val_ratio: 0.1
+
+model_overrides:
+  d_model: 32
+  n_heads: 4
+  num_layers: 1
+  dim_feedforward: 64
+  dropout: 0.0
+
+output_dir: outputs/burgers1d_transformer_rollout20
+checkpoint_path: results/checkpoints/burgers1d_transformer_rollout20.pt
+train_metrics_path: results/tables/burgers1d_transformer_rollout20_train_metrics.json
+eval_metrics_path: results/tables/burgers1d_transformer_rollout20_eval_metrics.json
+prediction_path: outputs/burgers1d_transformer_rollout20/predictions.npz
+figures_dir: results/figures

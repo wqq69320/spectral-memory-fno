@@ -1,0 +1,26 @@
+# CPU-friendly M9 cost-efficiency analysis sweep.
+#
+# These runs validate analysis mechanics only. They are not final benchmarks.
+name: m9_cost_efficiency
+
+experiments:
+  - configs/experiment/heat1d_fno_smoke.yaml
+  - configs/experiment/heat1d_sm_fno_smoke.yaml
+  - configs/experiment/heat1d_transformer_smoke.yaml
+  - configs/experiment/burgers1d_fno_smoke.yaml
+  - configs/experiment/burgers1d_sm_fno_smoke.yaml
+  - configs/experiment/burgers1d_transformer_smoke.yaml
+
+# Short-to-long protocol-scale horizons that fit the existing 50-step datasets.
+horizons:
+  - 5
+  - 10
+  - 20
+
+# Two seeds keep the run CPU-friendly while exercising repeated-seed analysis.
+seeds:
+  - 0
+  - 1
+
+# Expanded per-seed/per-horizon configs are generated under an ignored output path.
+expanded_config_dir: outputs

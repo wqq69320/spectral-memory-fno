@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "Please cite this repository after public release. Citation metadata is currently a placeholder."
+title: "Can We Forecast Long-Horizon PDE Dynamics Without Attention? Combining Fourier Neural Operators with State Space Memory"
+authors:
+  - family-names: "TODO"
+    given-names: "TODO"
+version: "0.1.0"
+date-released: "TODO"
+repository-code: "TODO"
+license: "MIT"

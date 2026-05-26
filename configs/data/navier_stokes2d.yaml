@@ -1,0 +1,36 @@
+# Dataset identifier used by scripts and experiment configs.
+name: navier_stokes2d
+
+# Number of simulated trajectories to generate.
+num_samples: 64
+
+# Number of grid points per spatial dimension.
+grid_size: 16
+
+# Number of temporal states per trajectory.
+time_steps: 36
+
+# Numerical time step for the simulator.
+dt: 0.005
+
+# Kinematic viscosity coefficient.
+viscosity: 0.001
+
+# Periodic domain length.
+domain_length: 1.0
+
+# Explicit advection CFL safety threshold.
+cfl_safety: 0.95
+
+# Fraction of samples used for training. The remainder is split into validation/test data.
+train_ratio: 0.8
+val_ratio: 0.1
+
+# Random seed for reproducible data generation.
+seed: 42
+
+# Relative output path for processed arrays.
+output_dir: data/processed/navier_stokes2d
+
+# Relative output file for generated trajectories and metadata.
+output_path: data/processed/navier_stokes2d/navier_stokes2d.npz

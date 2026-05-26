@@ -1,0 +1,37 @@
+# CPU-friendly Burgers1D smoke experiment using the SM-FNO model.
+name: burgers1d_sm_fno_smoke
+
+data_config: configs/data/burgers1d.yaml
+model_config: configs/model/sm_fno1d.yaml
+train_config: configs/train/default.yaml
+
+data_path: data/processed/burgers1d/burgers1d.npz
+
+input_steps: 10
+pred_steps: 1
+rollout_steps: 5
+
+epochs: 2
+batch_size: 64
+learning_rate: 0.001
+weight_decay: 0.0001
+grad_clip_norm: 1.0
+device: cpu
+seed: 42
+
+train_ratio: 0.8
+val_ratio: 0.1
+
+model_overrides:
+  modes: 8
+  width: 16
+  state_dim: 16
+  depth: 2
+  dropout: 0.0
+
+output_dir: outputs/burgers1d_sm_fno_smoke
+checkpoint_path: results/checkpoints/burgers1d_sm_fno_smoke.pt
+train_metrics_path: results/tables/burgers1d_sm_fno_smoke_train_metrics.json
+eval_metrics_path: results/tables/burgers1d_sm_fno_smoke_eval_metrics.json
+prediction_path: outputs/burgers1d_sm_fno_smoke/predictions.npz
+figures_dir: results/figures

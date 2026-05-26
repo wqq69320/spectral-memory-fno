@@ -1,0 +1,25 @@
+# Experiment identifier.
+name: heat1d_sm_fno
+
+# Relative config paths used by scripts.
+data_config: configs/data/heat1d.yaml
+model_config: configs/model/sm_fno1d.yaml
+train_config: configs/train/default.yaml
+
+# Number of autoregressive forecast steps used during evaluation.
+rollout_steps: 50
+
+# Metrics to compute for this experiment.
+metrics:
+  - relative_l2
+  - rollout_error
+  - inference_time
+  - memory_usage
+  - energy_error
+  - fourier_spectrum_error
+
+# Local output directory for experiment artifacts.
+output_dir: outputs/heat1d_sm_fno
+
+# Local results directory for summaries, figures, and tables.
+results_dir: results
