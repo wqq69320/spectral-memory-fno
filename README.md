@@ -1,7 +1,7 @@
 # Can We Forecast Long-Horizon PDE Dynamics Without Attention? Combining Fourier Neural Operators with State Space Memory
 
 <p align="center">
-  <img src="docs/assets/sm_fno2d_structure.png" alt="SM-FNO2D architecture" width="480">
+  <img src="docs/assets/sm_fno2d_structure_transparent.png" alt="SM-FNO2D architecture" width="480">
 </p>
 
 **Model name:** SM-FNO: Spectral Memory Fourier Neural Operator
