@@ -1,0 +1,19 @@
+# CPU-feasible medium Navier-Stokes2D diagnostic dataset.
+#
+# This is still a protocol diagnostic fixture, not a final CFD benchmark.
+name: navier_stokes2d
+
+num_samples: 36
+grid_size: 24
+time_steps: 76
+dt: 0.004
+viscosity: 0.001
+domain_length: 1.0
+cfl_safety: 0.95
+
+train_ratio: 0.8
+val_ratio: 0.1
+seed: 42
+
+output_dir: data/processed/navier_stokes2d_medium
+output_path: data/processed/navier_stokes2d_medium/navier_stokes2d_medium.npz

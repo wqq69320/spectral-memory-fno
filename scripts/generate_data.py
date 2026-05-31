@@ -64,10 +64,17 @@ def main() -> None:
             **common_kwargs,
             viscosity=float(config.get("viscosity", 0.001)),
             cfl_safety=float(config.get("cfl_safety", 0.95)),
+            save_every=int(config.get("save_every", 1)),
+            initial_amplitude=float(config.get("initial_amplitude", 1.0)),
+            max_modes=int(config.get("max_modes", 4)),
         )
         pde_metadata = {
             "viscosity": float(config.get("viscosity", 0.001)),
             "cfl_safety": float(config.get("cfl_safety", 0.95)),
+            "save_every": int(config.get("save_every", 1)),
+            "effective_dt": float(config.get("dt", 0.001)) * int(config.get("save_every", 1)),
+            "initial_amplitude": float(config.get("initial_amplitude", 1.0)),
+            "max_modes": int(config.get("max_modes", 4)),
         }
 
     metadata = {

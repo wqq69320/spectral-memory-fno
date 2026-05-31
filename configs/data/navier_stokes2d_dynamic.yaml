@@ -1,0 +1,29 @@
+# Dynamic CPU-feasible Navier-Stokes2D diagnostic dataset.
+#
+# This fixture intentionally saves less frequently than the medium fixture so
+# persistence is not near-perfect over a 36-step rollout. It remains a small
+# synthetic protocol diagnostic, not a CFD benchmark.
+name: navier_stokes2d
+
+num_samples: 36
+grid_size: 24
+time_steps: 76
+
+# Internal solver step. The saved-frame spacing is dt * save_every.
+dt: 0.004
+save_every: 10
+
+# Lower viscosity and moderate initial amplitude increase visible dynamics
+# while preserving the explicit advection CFL check.
+viscosity: 0.0005
+initial_amplitude: 1.25
+max_modes: 5
+domain_length: 1.0
+cfl_safety: 0.95
+
+train_ratio: 0.8
+val_ratio: 0.1
+seed: 52
+
+output_dir: data/processed/navier_stokes2d_dynamic
+output_path: data/processed/navier_stokes2d_dynamic/navier_stokes2d_dynamic.npz

@@ -16,6 +16,7 @@ def test_package_imports() -> None:
         SpectralMemoryFNO1D,
         SpectralMemoryFNO2D,
         SpectralMemoryFNO2DV2,
+        SpectralMemoryFNO2DV3,
         Transformer1DBaseline,
         Transformer2DBaseline,
     )
@@ -30,5 +31,6 @@ def test_package_imports() -> None:
     assert SpectralMemoryFNO1D is not None
     assert SpectralMemoryFNO2D is not None
     assert SpectralMemoryFNO2DV2 is not None
+    assert SpectralMemoryFNO2DV3 is not None
     assert Transformer1DBaseline is not None
     assert Transformer2DBaseline is not None

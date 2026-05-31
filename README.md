@@ -1,7 +1,7 @@
 # Can We Forecast Long-Horizon PDE Dynamics Without Attention? Combining Fourier Neural Operators with State Space Memory
 
 <p align="center">
-  <img src="docs/assets/sm_fno2d_structure_transparent.png" alt="SM-FNO2D architecture" width="480">
+  <img src="docs/assets/sm_fno2d_structure_dark.svg" alt="SM-FNO2D architecture" width="480">
 </p>
 
 **Model name:** SM-FNO: Spectral Memory Fourier Neural Operator
@@ -124,6 +124,12 @@ M10 extends the protocol to small 2D periodic Navier-Stokes vorticity forecastin
 M11 hardens the Navier-Stokes2D path with a small-grid FNO2D spectral-mode fix, a separate stabilized SM-FNO2D v2 model/config path, and protocol-scale v2 smoke, rollout, repeated-seed, aggregation, and cost-efficiency reporting.
 
 M12 adds forum wrap-up materials: a 15 minute talk outline, student section assignments, technical Q&A, figure-selection guide, final forum report draft, and final results caveats. These documents reference generated artifact paths for presentation preparation without adding generated outputs to git or making benchmark claims.
+
+M12 also adds a medium-grid Navier-Stokes2D diagnostic protocol at 24x24 resolution with 76 time steps and rollout-36 evaluation for FNO2D, SM-FNO2D v2, and Transformer2D. The medium outputs are diagnostic stability checks only, not benchmark evidence.
+
+M13 adds presentation-oriented Navier-Stokes2D visualization tooling that renders 2D vorticity predictions as 3D-style surface triptychs, rollout GIFs, and optional vorticity-derived velocity traces. These are visual diagnostics for 2D fields, not true 3D Navier-Stokes forecasts.
+
+M14 adds a rollout-stable SM-FNO2D v3 diagnostic path for medium Navier-Stokes2D. The v3 model keeps FNO2D as the residual base forecast, adds a conservative gated SSM correction, supports optional rollout-aware training, and records one-step/rollout mismatch diagnostics without making benchmark claims.
 
 The current smoke and repeated-seed runs are pipeline checks only. Larger datasets, stronger baselines, numerical validation, and final fair-comparison reports remain future work.
 

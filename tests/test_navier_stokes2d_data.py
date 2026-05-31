@@ -55,6 +55,57 @@ def test_navier_stokes2d_generator_rejects_unstable_cfl() -> None:
             raise AssertionError("Expected a CFL ValueError for an unstable configuration.")
 
 
+def test_navier_stokes2d_save_every_changes_saved_frame_spacing() -> None:
+    """Saving every internal step should produce smaller changes than sparse saves."""
+    common_kwargs = {
+        "num_samples": 2,
+        "grid_size": 12,
+        "time_steps": 6,
+        "viscosity": 0.001,
+        "dt": 0.002,
+        "domain_length": 1.0,
+        "seed": 11,
+        "cfl_safety": 0.95,
+        "initial_amplitude": 1.2,
+        "max_modes": 3,
+    }
+    dense = generate_navier_stokes2d(**common_kwargs, save_every=1)
+    sparse = generate_navier_stokes2d(**common_kwargs, save_every=4)
+
+    dense_change = torch.linalg.vector_norm(dense[:, -1] - dense[:, 0])
+    sparse_change = torch.linalg.vector_norm(sparse[:, -1] - sparse[:, 0])
+    assert sparse_change > dense_change
+
+
+def test_navier_stokes2d_dynamic_configs_match_m16_protocol() -> None:
+    """M16 dynamic configs should target the persistence-hard diagnostic fixture."""
+    data_config_path = REPO_ROOT / "configs" / "data" / "navier_stokes2d_dynamic.yaml"
+    with data_config_path.open("r", encoding="utf-8") as file:
+        data_config = yaml.safe_load(file)
+
+    assert data_config["grid_size"] == 24
+    assert data_config["time_steps"] >= 46
+    assert data_config["save_every"] > 1
+    assert data_config["dt"] * data_config["save_every"] > 0.02
+    assert data_config["viscosity"] <= 0.001
+
+    expected = {
+        "navier_stokes2d_dynamic_fno_diagnostic.yaml": "configs/model/fno2d.yaml",
+        "navier_stokes2d_dynamic_sm_fno_v3_diagnostic.yaml": "configs/model/sm_fno2d_v3.yaml",
+    }
+    for config_name, model_config in expected.items():
+        config_path = REPO_ROOT / "configs" / "experiment" / config_name
+        with config_path.open("r", encoding="utf-8") as file:
+            config = yaml.safe_load(file)
+
+        assert config["data_config"] == "configs/data/navier_stokes2d_dynamic.yaml"
+        assert config["model_config"] == model_config
+        assert config["input_steps"] == 10
+        assert config["pred_steps"] == 1
+        assert config["rollout_steps"] == 36
+        assert config["device"] == "cpu"
+
+
 def test_navier_stokes2d_smoke_configs_match_shared_protocol() -> None:
     """Navier-Stokes smoke configs should share M10 protocol settings."""
     expected_model_configs = {
@@ -84,3 +135,23 @@ def test_navier_stokes2d_smoke_configs_match_shared_protocol() -> None:
         assert config["seed"] == 42
         assert config["train_ratio"] == 0.8
         assert config["val_ratio"] == 0.1
+
+
+def test_navier_stokes2d_medium_v3_config_uses_rollout_training() -> None:
+    """The M14 v3 medium diagnostic config should enable rollout-aware training."""
+    config_path = (
+        REPO_ROOT
+        / "configs"
+        / "experiment"
+        / "navier_stokes2d_medium_sm_fno_v3_diagnostic.yaml"
+    )
+    with config_path.open("r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+
+    assert config["data_config"] == "configs/data/navier_stokes2d_medium.yaml"
+    assert config["model_config"] == "configs/model/sm_fno2d_v3.yaml"
+    assert config["input_steps"] == 10
+    assert config["pred_steps"] == 1
+    assert config["rollout_steps"] == 36
+    assert config["rollout_train_steps"] >= 1
+    assert config["rollout_loss_weight"] > 0.0

@@ -1,0 +1,54 @@
+# Dynamic Navier-Stokes2D diagnostic using SM-FNO2D v3 with skill-oriented training.
+#
+# Protocol diagnostic only; not a final benchmark config.
+name: navier_stokes2d_dynamic_sm_fno_v3_skill_optimized
+
+data_config: configs/data/navier_stokes2d_dynamic.yaml
+model_config: configs/model/sm_fno2d_v3.yaml
+train_config: configs/train/default.yaml
+
+data_path: data/processed/navier_stokes2d_dynamic/navier_stokes2d_dynamic.npz
+
+input_steps: 10
+pred_steps: 1
+rollout_steps: 36
+
+# Rollout-aware loss tests whether the model learns changes beyond persistence.
+rollout_train_steps: 8
+rollout_loss_weight: 0.3
+delta_loss_weight: 0.2
+persistence_loss_weight: 0.1
+
+# Longer than the M16 dynamic smoke config while remaining CPU-feasible.
+epochs: 4
+batch_size: 24
+learning_rate: 0.0007
+weight_decay: 0.0001
+grad_clip_norm: 1.0
+device: cpu
+seed: 52
+
+train_ratio: 0.8
+val_ratio: 0.1
+
+model_overrides:
+  modes: 6
+  width: 16
+  state_dim: 16
+  depth: 1
+  gate_limit: 0.35
+  gate_bias: -3.0
+  correction_scale: 1.0
+  dropout: 0.0
+
+# Initialize the v3 residual FNO base from the matching FNO2D diagnostic checkpoint.
+fno_base_checkpoint_path: results/checkpoints/navier_stokes2d_dynamic_fno_diagnostic.pt
+
+output_dir: outputs/navier_stokes2d_dynamic_sm_fno_v3_skill_optimized
+checkpoint_path: results/checkpoints/navier_stokes2d_dynamic_sm_fno_v3_skill_optimized.pt
+train_metrics_path: results/tables/navier_stokes2d_dynamic_sm_fno_v3_skill_optimized_train_metrics.json
+eval_metrics_path: results/tables/navier_stokes2d_dynamic_sm_fno_v3_skill_optimized_eval_metrics.json
+prediction_path: outputs/navier_stokes2d_dynamic_sm_fno_v3_skill_optimized/predictions.npz
+save_full_test_rollouts: true
+full_test_rollouts_path: outputs/navier_stokes2d_dynamic_sm_fno_v3_skill_optimized/full_test_rollouts.npz
+figures_dir: results/figures

@@ -59,12 +59,21 @@ def fourier_spectrum_error(
     target: torch.Tensor,
     eps: float = 1e-8,
 ) -> torch.Tensor:
-    """Compute relative error between 1D Fourier amplitude spectra.
-
-    TODO: Generalize this metric for 2D fields and configurable spatial axes.
-    """
-    pred_spectrum = torch.abs(torch.fft.rfft(prediction, dim=-2))
-    target_spectrum = torch.abs(torch.fft.rfft(target, dim=-2))
+    """Compute relative error between spatial Fourier amplitude spectra."""
+    if prediction.shape != target.shape:
+        raise ValueError(
+            f"prediction and target shapes must match, got {tuple(prediction.shape)} "
+            f"and {tuple(target.shape)}."
+        )
+    if prediction.ndim < 3:
+        raise ValueError("fourier_spectrum_error expects at least batch, spatial, channel dims.")
+    spatial_dims = (
+        tuple(range(2, prediction.ndim - 1))
+        if prediction.ndim >= 4
+        else (prediction.ndim - 2,)
+    )
+    pred_spectrum = torch.abs(torch.fft.rfftn(prediction, dim=spatial_dims))
+    target_spectrum = torch.abs(torch.fft.rfftn(target, dim=spatial_dims))
     numerator = torch.linalg.vector_norm(
         pred_spectrum - target_spectrum,
         ord=2,

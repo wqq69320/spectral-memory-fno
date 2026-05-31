@@ -1,0 +1,42 @@
+# Dynamic Navier-Stokes2D diagnostic using the Transformer2D temporal-attention baseline.
+#
+# Protocol diagnostic only; not a final benchmark config. This baseline applies
+# temporal attention per spatial grid cell, not full space-time token attention.
+name: navier_stokes2d_dynamic_transformer_diagnostic
+
+data_config: configs/data/navier_stokes2d_dynamic.yaml
+model_config: configs/model/transformer2d.yaml
+train_config: configs/train/default.yaml
+
+data_path: data/processed/navier_stokes2d_dynamic/navier_stokes2d_dynamic.npz
+
+input_steps: 10
+pred_steps: 1
+rollout_steps: 36
+
+epochs: 2
+batch_size: 24
+learning_rate: 0.001
+weight_decay: 0.0001
+grad_clip_norm: 1.0
+device: cpu
+seed: 52
+
+train_ratio: 0.8
+val_ratio: 0.1
+
+model_overrides:
+  d_model: 24
+  n_heads: 4
+  num_layers: 1
+  dim_feedforward: 48
+  dropout: 0.0
+
+output_dir: outputs/navier_stokes2d_dynamic_transformer_diagnostic
+checkpoint_path: results/checkpoints/navier_stokes2d_dynamic_transformer_diagnostic.pt
+train_metrics_path: results/tables/navier_stokes2d_dynamic_transformer_diagnostic_train_metrics.json
+eval_metrics_path: results/tables/navier_stokes2d_dynamic_transformer_diagnostic_eval_metrics.json
+prediction_path: outputs/navier_stokes2d_dynamic_transformer_diagnostic/predictions.npz
+save_full_test_rollouts: true
+full_test_rollouts_path: outputs/navier_stokes2d_dynamic_transformer_diagnostic/full_test_rollouts.npz
+figures_dir: results/figures

@@ -77,6 +77,9 @@ def generate_navier_stokes2d(
     domain_length: float = 1.0,
     seed: int = 42,
     cfl_safety: float = 0.95,
+    save_every: int = 1,
+    initial_amplitude: float = 1.0,
+    max_modes: int = 4,
 ) -> torch.Tensor:
     """Generate 2D viscous incompressible Navier-Stokes vorticity trajectories.
 
@@ -84,6 +87,12 @@ def generate_navier_stokes2d(
     derivatives, explicit nonlinear advection, and semi-implicit diffusion:
 
     ``omega_t + u dot grad(omega) = viscosity * Laplacian(omega)``.
+
+    ``dt`` is the internal solver time step. ``save_every`` controls the number
+    of internal solver steps between saved frames, so the effective saved-frame
+    spacing is ``dt * save_every``. Increasing ``save_every`` is useful for
+    persistence-hard diagnostics because it makes consecutive saved frames less
+    stationary while preserving the internal CFL stability check.
 
     This generator is intended for small CPU protocol validation, not
     high-accuracy computational fluid dynamics.
@@ -105,14 +114,21 @@ def generate_navier_stokes2d(
         raise ValueError("domain_length must be positive.")
     if cfl_safety <= 0.0:
         raise ValueError("cfl_safety must be positive.")
+    if save_every < 1:
+        raise ValueError("save_every must be at least 1.")
+    if initial_amplitude <= 0.0:
+        raise ValueError("initial_amplitude must be positive.")
+    if max_modes < 1:
+        raise ValueError("max_modes must be at least 1.")
 
     dx = domain_length / grid_size
     k_x, k_y, wave_number_squared = _spectral_operators(grid_size, domain_length)
-    current = _make_smooth_vorticity_initial_conditions(
+    current = initial_amplitude * _make_smooth_vorticity_initial_conditions(
         num_samples,
         grid_size,
         domain_length,
         seed,
+        max_modes=max_modes,
     )
     trajectories = torch.empty(
         num_samples,
@@ -125,31 +141,33 @@ def generate_navier_stokes2d(
     trajectories[:, 0, :, :, 0] = current
 
     for time_index in range(1, time_steps):
-        velocity_x, velocity_y, grad_x, grad_y = _velocity_and_gradients(
-            current,
-            k_x=k_x,
-            k_y=k_y,
-            wave_number_squared=wave_number_squared,
-        )
-        max_speed = float(torch.sqrt(velocity_x.square() + velocity_y.square()).amax())
-        cfl_number = max_speed * dt / dx
-        if cfl_number > cfl_safety:
-            raise ValueError(
-                "Navier-Stokes generator violates the explicit advection CFL limit "
-                f"before step {time_index}: CFL={cfl_number:.4f}, "
-                f"cfl_safety={cfl_safety:.4f}."
+        for internal_step in range(save_every):
+            solver_step = (time_index - 1) * save_every + internal_step + 1
+            velocity_x, velocity_y, grad_x, grad_y = _velocity_and_gradients(
+                current,
+                k_x=k_x,
+                k_y=k_y,
+                wave_number_squared=wave_number_squared,
             )
+            max_speed = float(torch.sqrt(velocity_x.square() + velocity_y.square()).amax())
+            cfl_number = max_speed * dt / dx
+            if cfl_number > cfl_safety:
+                raise ValueError(
+                    "Navier-Stokes generator violates the explicit advection CFL limit "
+                    f"before solver step {solver_step}: CFL={cfl_number:.4f}, "
+                    f"cfl_safety={cfl_safety:.4f}."
+                )
 
-        advection = velocity_x * grad_x + velocity_y * grad_y
-        current_hat = torch.fft.fft2(current, dim=(-2, -1))
-        advection_hat = torch.fft.fft2(advection, dim=(-2, -1))
-        next_hat = (current_hat - dt * advection_hat) / (
-            1.0 + viscosity * dt * wave_number_squared
-        )
-        next_hat[:, 0, 0] = 0.0
-        current = torch.fft.ifft2(next_hat, dim=(-2, -1)).real.to(dtype=torch.float32)
-        if not torch.isfinite(current).all():
-            raise FloatingPointError("Navier-Stokes generator produced non-finite values.")
+            advection = velocity_x * grad_x + velocity_y * grad_y
+            current_hat = torch.fft.fft2(current, dim=(-2, -1))
+            advection_hat = torch.fft.fft2(advection, dim=(-2, -1))
+            next_hat = (current_hat - dt * advection_hat) / (
+                1.0 + viscosity * dt * wave_number_squared
+            )
+            next_hat[:, 0, 0] = 0.0
+            current = torch.fft.ifft2(next_hat, dim=(-2, -1)).real.to(dtype=torch.float32)
+            if not torch.isfinite(current).all():
+                raise FloatingPointError("Navier-Stokes generator produced non-finite values.")
         trajectories[:, time_index, :, :, 0] = current
 
     return trajectories

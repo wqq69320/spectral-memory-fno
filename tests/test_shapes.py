@@ -15,10 +15,12 @@ from sm_fno.models import (
     SpectralMemoryFNO1D,
     SpectralMemoryFNO2D,
     SpectralMemoryFNO2DV2,
+    SpectralMemoryFNO2DV3,
     StableGatedDiagonalSSM,
     Transformer1DBaseline,
     Transformer2DBaseline,
 )
+from sm_fno.training import Trainer
 
 
 def test_legacy_model_output_shapes_match_input_grid_shape() -> None:
@@ -192,6 +194,28 @@ def test_sm_fno2d_v2_window_forward_shape_and_backward() -> None:
     assert model.memory.log_decay.grad is not None
 
 
+def test_sm_fno2d_v3_window_forward_shape_and_backward() -> None:
+    """SM-FNO2D v3 should map 2D input windows to 2D prediction windows."""
+    model = SpectralMemoryFNO2DV3(
+        in_channels=1,
+        out_channels=1,
+        modes=4,
+        width=8,
+        state_dim=8,
+        depth=1,
+        input_steps=4,
+        pred_steps=2,
+        gate_limit=0.25,
+    )
+    inputs = torch.randn(2, 4, 12, 12, 1)
+    outputs = model(inputs)
+    assert outputs.shape == (2, 2, 12, 12, 1)
+    outputs.square().mean().backward()
+    assert model.base.lift.weight.grad is not None
+    assert model.memory.log_decay.grad is not None
+    assert model.gate_project.bias.grad is not None
+
+
 def test_transformer1d_window_forward_shape_and_backward() -> None:
     """Transformer1D should map input windows to prediction windows with gradients."""
     model = Transformer1DBaseline(
@@ -263,6 +287,35 @@ def test_autoregressive_rollout_2d_shape() -> None:
     initial_state = torch.randn(2, 3, 8, 8, 1)
     rollout = autoregressive_rollout(model, initial_state, steps=4)
     assert rollout.shape == (2, 4, 8, 8, 1)
+
+
+def test_rollout_aware_trainer_accepts_longer_targets() -> None:
+    """Rollout-aware training should use multi-step targets with a one-step model."""
+
+    class LastStepScale(torch.nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.scale = torch.nn.Parameter(torch.tensor(0.5))
+
+        def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+            return self.scale * inputs[:, -1:]
+
+    model = LastStepScale()
+    inputs = torch.randn(2, 3, 8, 1)
+    targets = torch.randn(2, 4, 8, 1)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    trainer = Trainer(
+        model=model,
+        optimizer=optimizer,
+        device=torch.device("cpu"),
+        rollout_train_steps=4,
+        rollout_loss_weight=0.2,
+    )
+
+    history = trainer.fit([(inputs, targets)], epochs=1)
+
+    assert len(history["train_loss"]) == 1
+    assert model.scale.grad is not None
 
 
 def test_mlp_flattened_heat1d_shape() -> None:

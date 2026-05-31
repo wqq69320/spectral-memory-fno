@@ -19,6 +19,7 @@ from sm_fno.models import (
     SpectralMemoryFNO1D,
     SpectralMemoryFNO2D,
     SpectralMemoryFNO2DV2,
+    SpectralMemoryFNO2DV3,
     Transformer1DBaseline,
     Transformer2DBaseline,
 )
@@ -193,6 +194,21 @@ def build_model(
             input_steps=input_steps,
             pred_steps=pred_steps,
         )
+    if model_name in {"sm_fno2d_v3", "spectralmemoryfno2dv3", "spectral_memory_fno2d_v3"}:
+        return SpectralMemoryFNO2DV3(
+            in_channels=int(model_config.get("in_channels", 1)),
+            out_channels=int(model_config.get("out_channels", 1)),
+            modes=int(model_config.get("modes", 8)),
+            width=int(model_config.get("width", 32)),
+            state_dim=int(model_config.get("state_dim", 32)),
+            depth=int(model_config.get("depth", 4)),
+            dropout=float(model_config.get("dropout", 0.0)),
+            input_steps=input_steps,
+            pred_steps=pred_steps,
+            gate_limit=float(model_config.get("gate_limit", 0.25)),
+            gate_bias=float(model_config.get("gate_bias", -4.0)),
+            correction_scale=float(model_config.get("correction_scale", 1.0)),
+        )
     if model_name in {"transformer", "transformer1d", "transformer1dbaseline"}:
         return Transformer1DBaseline(
             in_channels=int(model_config.get("in_channels", 1)),
@@ -220,6 +236,32 @@ def build_model(
     raise ValueError(f"Unsupported model: {model_name}")
 
 
+def maybe_initialize_fno_base(
+    model: torch.nn.Module,
+    experiment_config: dict[str, object],
+) -> dict[str, object]:
+    """Optionally initialize an SM-FNO residual FNO base from an FNO checkpoint."""
+    checkpoint_value = experiment_config.get("fno_base_checkpoint_path")
+    if checkpoint_value is None:
+        return {"fno_base_initialized": False, "fno_base_checkpoint_path": None}
+
+    checkpoint_path = Path(str(checkpoint_value))
+    if not checkpoint_path.exists():
+        raise FileNotFoundError(f"FNO base checkpoint not found: {checkpoint_path}")
+    if not hasattr(model, "base"):
+        raise ValueError("fno_base_checkpoint_path requires a model with a `.base` module.")
+
+    checkpoint = torch.load(checkpoint_path, map_location="cpu")
+    state_dict = checkpoint.get("model_state_dict", checkpoint)
+    missing_keys, unexpected_keys = model.base.load_state_dict(state_dict, strict=False)
+    return {
+        "fno_base_initialized": True,
+        "fno_base_checkpoint_path": str(checkpoint_path),
+        "fno_base_missing_keys": list(missing_keys),
+        "fno_base_unexpected_keys": list(unexpected_keys),
+    }
+
+
 def main() -> None:
     """Run a minimal Heat1D training loop."""
     args = parse_args()
@@ -236,12 +278,18 @@ def main() -> None:
 
     input_steps = int(experiment_config.get("input_steps", 10))
     pred_steps = int(experiment_config.get("pred_steps", 1))
+    rollout_train_steps = int(experiment_config.get("rollout_train_steps", 0))
+    rollout_loss_weight = float(experiment_config.get("rollout_loss_weight", 0.0))
+    target_steps = max(
+        pred_steps,
+        rollout_train_steps if rollout_loss_weight > 0.0 else pred_steps,
+    )
     data_path = resolve_data_path(experiment_config, data_config)
 
     train_dataset, val_dataset, _ = build_trajectory_datasets(
         data_path,
         input_steps=input_steps,
-        pred_steps=pred_steps,
+        pred_steps=target_steps,
         train_ratio=float(
             experiment_config.get("train_ratio", data_config.get("train_ratio", 0.8))
         ),
@@ -260,6 +308,7 @@ def main() -> None:
         pred_steps=pred_steps,
         grid_size=train_dataset.grid_size,
     )
+    fno_base_init = maybe_initialize_fno_base(model, experiment_config)
     parameter_counts = count_parameters(model)
     optimizer = build_optimizer(
         model.parameters(),
@@ -275,6 +324,10 @@ def main() -> None:
         model=model,
         optimizer=optimizer,
         device=device,
+        rollout_train_steps=rollout_train_steps,
+        rollout_loss_weight=rollout_loss_weight,
+        delta_loss_weight=float(experiment_config.get("delta_loss_weight", 0.0)),
+        persistence_loss_weight=float(experiment_config.get("persistence_loss_weight", 0.0)),
         grad_clip_norm=(
             None
             if experiment_config.get("grad_clip_norm", train_config.get("grad_clip_norm")) is None
@@ -315,6 +368,7 @@ def main() -> None:
             "pred_steps": pred_steps,
             "grid_size": train_dataset.grid_size,
             "experiment_name": experiment_name,
+            **fno_base_init,
         },
         checkpoint_path,
     )
@@ -326,7 +380,9 @@ def main() -> None:
         "run_type": str(
             experiment_config.get(
                 "run_type",
-                "repeated_seed" if bool(experiment_config.get("repeated_seed", False)) else "single",
+                "repeated_seed"
+                if bool(experiment_config.get("repeated_seed", False))
+                else "single",
             )
         ),
         "seed": seed,
@@ -336,7 +392,15 @@ def main() -> None:
         "checkpoint_path": str(checkpoint_path),
         "input_steps": input_steps,
         "pred_steps": pred_steps,
+        "target_steps": target_steps,
+        "rollout_train_steps": rollout_train_steps,
+        "rollout_loss_weight": rollout_loss_weight,
+        "delta_loss_weight": float(experiment_config.get("delta_loss_weight", 0.0)),
+        "persistence_loss_weight": float(
+            experiment_config.get("persistence_loss_weight", 0.0)
+        ),
         "rollout_steps": int(experiment_config.get("rollout_steps", pred_steps)),
+        **fno_base_init,
         **parameter_counts,
         "train_loss": history["train_loss"],
         "val_loss": history["val_loss"],
